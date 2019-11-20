@@ -5,10 +5,12 @@ import time
 from PIL import Image
 import numpy as np
 
-from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QMainWindow, QLabel, QDesktopWidget)
+from PyQt5.QtWidgets import (QAction, QApplication, QDockWidget, QFileDialog, QMainWindow, QLabel, QDesktopWidget, QListWidget)
 from PyQt5.QtGui import (QImage, QImageWriter, QKeySequence, QPixmap)
 from PyQt5.QtCore import Qt
 from PyQt5.QtTest import QTest
+
+import deocc_app
 
 class MainWindow(QMainWindow):
 
@@ -20,13 +22,16 @@ class MainWindow(QMainWindow):
         self.setGeometry(0, 0, self.swidth, self.sheight)
 
         # UI
-        self.canvas = None
-        self.canvas_show = QImage()
         self.filename = None
-        self.main_width, self.main_height = self.swidth * 0.9, self.sheight * 0.9
-        self.imageLabel = QLabel()
-        self.imageLabel.setAlignment(Qt.AlignCenter)
-        self.setCentralWidget(self.imageLabel)
+        self.addMainApp()
+
+        # log
+        logDockWidget =QDockWidget('Log', self)
+        logDockWidget.setObjectName('LogDockWidget')
+        logDockWidget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.listWidget = QListWidget()
+        logDockWidget.setWidget(self.listWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, logDockWidget)
 
         # action
         fileOpenAction = self.createAction(
@@ -45,7 +50,7 @@ class MainWindow(QMainWindow):
         editDeoccAction = self.createAction(
             'Deocclusion', slot=self.editDeocc, shortcut='Ctrl+E', tip='perform de-occlusion')
         editResetAction = self.createAction(
-            'Reset', slot=self.reset, shortcut='Ctrl+R', tip='reset image')
+            'Reset', slot=self.mainApp.reset, shortcut='Ctrl+R', tip='reset image')
 
         # menu
         self.fileMenu = self.menuBar().addMenu('&File')
@@ -58,10 +63,15 @@ class MainWindow(QMainWindow):
         self.editMenu = self.menuBar().addMenu('&Edit')
         self.editMenu.addAction(editDeoccAction)
         self.editMenu.addAction(editResetAction)
-        
+
         self.setWindowTitle('De-Occlusion')
         self.showMaximized()
 
+    def addMainApp(self):
+        self.mainApp = deocc_app.Application(self, (self.swidth, self.sheight))
+        self.setCentralWidget(self.mainApp)
+        self.keyPressEvent = self.mainApp.keyPressEvent
+        
     def createAction(self, text, slot=None, shortcut=None, tip=None, checkable=False, signal='triggered'):
         action = QAction(text, self)
         if shortcut is not None:
@@ -81,73 +91,44 @@ class MainWindow(QMainWindow):
         with open(obj_list, 'r') as f:
             lines = f.readlines()
         obj_fns = [os.path.join(file_dir, l.strip()) for l in lines]
-        self.bkg = np.array(Image.open(os.path.join(file_dir, "bkg.png")))
-        self.objects = [np.array(Image.open(fn)) for fn in obj_fns]
-        self.paste(self.bkg)
-        QTest.qWait(1000)
-        for o in self.objects:
-            self.paste(o)
-            self.show()
-            QTest.qWait(1000)
-        self.show()
-
-    def reset(self):
-        self.canvas =  self.image_ori.copy()
-        self.show()
-
-    def paste(self, image):
-        if image.shape[2] == 4:
-            region = np.where(image[:,:,3])
-            self.canvas[region[0], region[1], :] = image[region[0], region[1], :3]
-        else:
-            self.canvas[...] = image.copy()
+        bkg = np.array(Image.open(os.path.join(file_dir, "bkg.png")))
+        objects = [np.array(Image.open(fn)) for fn in obj_fns]
+        self.mainApp.init_components(bkg, objects)
 
     def fileOpen(self):
-        print("call fileOpen")
         self.filename, _ = QFileDialog.getOpenFileName(self, 'Select an image file: ', filter='*.jpg')
         if self.filename is None:
             return
-        self.image_ori = np.array(Image.open(self.filename).convert('RGB'))
-        self.image_height = self.image_ori.shape[0]
-        self.image_width = self.image_ori.shape[1]
-        self.canvas = self.image_ori.copy()
-        self.show()
+        image_ori = np.array(Image.open(self.filename).convert('RGB'))
+        self.mainApp.init_image(image_ori)
 
     def fileSave(self):
-        if self.canvas_show.isNull():
+        if self.mainApp.canvas_show.isNull():
             return
         if self.filename is None:
             self.fileSaveAs()
         else:
-            self.canvas_show.save(self.filename, None)
+            self.mainApp.canvas_show.save(self.filename, None)
 
     def fileSaveAs(self):
-        if self.canvas_show.isNull():
+        if self.mainApp.canvas_show.isNull():
             return
         fname = self.filename if self.filename else '.'
         formats = ['{0}'.format(str(format).lower()) for format in QImageWriter.supportedImageFormats()]
         formats = ['*.{0}'.format(format[2:5]) for format in formats]
-        fname,_ = QFileDialog.getSaveFileName(self, 'Image Editor - Save Image', fname, 'Image files ({0})'.format(' '.join(formats)))
+        fname, _ = QFileDialog.getSaveFileName(self, 'Image Editor - Save Image', fname, 'Image files ({0})'.format(' '.join(formats)))
         if fname:
             if '.' not in fname:
                 fname += '.png'
             self.filename = fname
             self.fileSave()
 
-    def show(self):
-        if self.canvas is not None:
-            self.canvas_show = QImage(
-                self.canvas.data, self.image_width, self.image_height,
-                3 * self.image_width, QImage.Format_RGB888)
-        else:
-            self.canvas_show = QImage()
-        pixmap = QPixmap.fromImage(self.canvas_show)
-        pixmap = pixmap.scaled(self.main_width, self.main_height, Qt.KeepAspectRatio)
-        self.imageLabel.setPixmap(pixmap)
+    def updateStatus(self, message):
+        self.statusBar().showMessage(message, 5000)
+        self.listWidget.addItem(message)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationName("De-Occlusion")
     form = MainWindow()
-    form.show()
-    app.exec_()
+    sys.exit(app.exec_())
