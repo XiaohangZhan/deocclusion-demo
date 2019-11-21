@@ -18,7 +18,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         screen = QDesktopWidget().screenGeometry()
-        self.swidth, self.sheight = screen.width(), screen.height()
+        #self.swidth, self.sheight = screen.width(), screen.height()
+        self.swidth, self.sheight = 800, 600
         self.setGeometry(0, 0, self.swidth, self.sheight)
 
         # UI
@@ -26,12 +27,13 @@ class MainWindow(QMainWindow):
         self.addMainApp()
 
         # log
-        logDockWidget =QDockWidget('Log', self)
-        logDockWidget.setObjectName('LogDockWidget')
-        logDockWidget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.listWidget = QListWidget()
-        logDockWidget.setWidget(self.listWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, logDockWidget)
+        if False:
+            logDockWidget =QDockWidget('Log', self)
+            logDockWidget.setObjectName('LogDockWidget')
+            logDockWidget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+            self.listWidget = QListWidget()
+            logDockWidget.setWidget(self.listWidget)
+            self.addDockWidget(Qt.RightDockWidgetArea, logDockWidget)
 
         # action
         fileOpenAction = self.createAction(
@@ -65,7 +67,8 @@ class MainWindow(QMainWindow):
         self.editMenu.addAction(editResetAction)
 
         self.setWindowTitle('De-Occlusion')
-        self.showMaximized()
+        #self.showMaximized()
+        self.show()
 
     def addMainApp(self):
         self.mainApp = deocc_app.Application(self, (self.swidth, self.sheight))
