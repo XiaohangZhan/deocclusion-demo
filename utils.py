@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from scipy import ndimage
 
 from PyQt5 import QtGui
 
@@ -23,7 +24,7 @@ def crop_padding(img, roi, pad_value):
     '''
     img: HxW or HxWxC np.ndarray
     roi: (x,y,w,h)
-    pad_value: [b,g,r]
+    pad_value: [b,g,r, (a)]
     '''
     need_squeeze = False
     if len(img.shape) == 2:
@@ -46,11 +47,20 @@ def resize_with_center(img, center, ratio):
     nh, nw = int(h * ratio), int(w * ratio)
     center_move_x = cx * (ratio - 1)
     center_move_y = cy * (ratio - 1)
-    newimg = cv2.resize(img, (nh, nw), interpolation=cv2.INTER_LINEAR)
+    newimg = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_LINEAR)
     #newimg[:,:,3][newimg[:,:,3] < 255] = 0
-    bbox = [center_move_x, center_move_y, h, w]
-    newimg = crop_padding(newimg, bbox, pad_value=tuple([0 for _ in range(img.shape[2])]))
+    bbox = [center_move_x, center_move_y, w, h]
+    newimg = crop_padding(newimg, bbox, pad_value=tuple([0] * img.shape[2]))
     return newimg
+
+def rotate_with_center(img, center, degree):
+    cx, cy = map(int, center)
+    h, w, ch = img.shape
+    bbox_centered = [0, 0, 2 * cx, 2 * cy]
+    img_c = crop_padding(img, bbox_centered, pad_value=tuple([0] * ch))
+    img_r = ndimage.rotate(img_c, degree, reshape=False)
+    bbox_recover = [0, 0, w, h]
+    return crop_padding(img_r, bbox_recover, pad_value=tuple([0] * ch))
 
 def mask_to_bbox(mask):
     mask = (mask == 1)
