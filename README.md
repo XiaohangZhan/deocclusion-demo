@@ -44,7 +44,7 @@ For further information, please contact [Xiaohang Zhan](https://xiaohangzhan.git
 
 * Third, copy the image as well as the folder containing the decomposed components under `decomposition` in this repo. Then enjoy yourself to re-compose the image.
 
-** Notice
+## Notice
 
 There are still some bugs. Since I have no time to fix them, you are welcome to raise pull request to fix them. The bugs are below:
 
