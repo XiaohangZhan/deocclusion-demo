@@ -4,7 +4,7 @@ This repo is the image manipulation demo of "[Self-Supervised Scene De-occlusion
 
 * Below is the demo.
 
-<img src="demos/manipulation.gif" width=500>
+<img src="manipulation.gif" width=500>
 
 For further information, please contact [Xiaohang Zhan](https://xiaohangzhan.github.io/).
 
