@@ -48,4 +48,4 @@ For further information, please contact [Xiaohang Zhan](https://xiaohangzhan.git
 
 There are still some bugs. Since I have no time to fix them, you are welcome to raise pull request to fix them. The bugs are below:
 
-* When you click `Open` to browse a folder, but choose cancel, the program crash.
+* When you click `Open` or `Insert` to browse a folder, but choose cancel, the program crash.
