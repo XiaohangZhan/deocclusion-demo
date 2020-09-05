@@ -40,9 +40,9 @@ For further information, please contact [Xiaohang Zhan](https://xiaohangzhan.git
 
 * First of all, you should launch the jupyter notebooks [here](https://github.com/XiaohangZhan/deocclusion/blob/master/demos/), e.g., `demo_cocoa.ipynb`.
 
-* Second, run the notebook up to the last cell. In the last cell, change the `False` under `# save` to `True`. In this way, the completed objects as well as the background are saved under `outputs/decomposition/`.
+* Second, run the notebook up to the last cell. In the last cell, change the `False` under `# save` to `True`. In this way, the completed objects as well as the background are saved following the topological order under `outputs/decomposition/`.
 
-* Third, copy the image as well as the folder containing the decomposed components under this repo. Then enjoy yourself to re-compose the image.
+* Third, copy the image as well as the folder containing the decomposed components under `decomposition` in this repo. Then enjoy yourself to re-compose the image.
 
 ** Notice
 
