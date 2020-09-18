@@ -107,7 +107,3 @@ test
 *.swp
 .DS_Store
 results
-isolated
-decomposition
-materials
-original
